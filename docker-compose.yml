@@ -1,0 +1,128 @@
+version: "3.8"
+
+services:
+  # PostgreSQL database for counter-api
+  postgres:
+    image: postgres:15-alpine
+    container_name: microservice-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-counterdb}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB database for message-processor
+  mongodb:
+    image: mongo:7
+    container_name: microservice-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-admin123}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-events}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # LocalStack for AWS services (SQS, SES)
+  localstack:
+    image: localstack/localstack:3
+    container_name: microservice-localstack
+    ports:
+      - "4566:4566"
+      - "4510-4559:4510-4559"
+    environment:
+      - SERVICES=sqs,ses
+      - DEBUG=1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - LOCALSTACK_HOST=localhost
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - localstack_data:/var/lib/localstack
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # Counter API Service (Kotlin/Spring Boot)
+  counter-api:
+    build:
+      context: ./counter-api
+      dockerfile: Dockerfile
+    container_name: microservice-counter-api
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-counterdb}
+      - DATABASE_USERNAME=${POSTGRES_USER:-postgres}
+      - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - LOCALSTACK_ENDPOINT=http://localstack:4566
+      - SQS_QUEUE_NAME=${SQS_QUEUE_NAME:-counter-increment-queue}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-test}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-test}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Message Processor Service (PHP/Symfony)
+  message-processor:
+    build:
+      context: ./message-processor
+      dockerfile: Dockerfile
+    container_name: microservice-message-processor
+    environment:
+      - APP_ENV=prod
+      - MONGODB_URL=mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-admin123}@mongodb:27017/${MONGO_DATABASE:-events}?authSource=admin
+      - LOCALSTACK_ENDPOINT=http://localstack:4566
+      - SQS_QUEUE_URL=http://localstack:4566/000000000000/${SQS_QUEUE_NAME:-counter-increment-queue}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-test}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-test}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - SES_FROM_EMAIL=${SES_FROM_EMAIL:-noreply@example.com}
+      - SES_TO_EMAIL=${SES_TO_EMAIL:-admin@example.com}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./message-processor:/app
+    command: >
+      sh -c "
+        echo 'Starting Message Processor...' &&
+        php bin/console app:health-check &&
+        echo 'Health check completed. Ready to process messages.' &&
+        tail -f /dev/null
+      "
+
+volumes:
+  postgres_data:
+    driver: local
+  mongodb_data:
+    driver: local
+  localstack_data:
+    driver: local
+
+networks:
+  default:
+    name: microservice-network
