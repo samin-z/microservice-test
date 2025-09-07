@@ -1,9 +1,19 @@
 server:
   port: 8080
+  tomcat:
+    accesslog:
+      enabled: true
+      pattern: '%h %l %u %t "%r" %s %b %D'
 
 spring:
   application:
     name: counter-api
+
+  # Disable Spring Cloud AWS auto-configuration to avoid region issues
+  autoconfigure:
+    exclude:
+      - io.awspring.cloud.autoconfigure.sqs.SqsAutoConfiguration
+      - io.awspring.cloud.autoconfigure.core.AwsAutoConfiguration
 
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/counterdb}
@@ -25,6 +35,10 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
+  mvc:
+    log-request-details: true
+    log-resolved-exception: true
+
 management:
   endpoints:
     web:
@@ -35,9 +49,20 @@ management:
       show-details: always
 
 logging:
-  mvc:
-    log-request-details: true
-    log-resolved-exception: true
+  level:
+    com.example.counter: INFO
+    org.springframework.web: DEBUG
+    org.springframework.web.servlet.DispatcherServlet: DEBUG
+    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+    org.apache.http: DEBUG
+    org.apache.http.wire: DEBUG
+    org.springframework.boot.actuate.trace.http: DEBUG
+    org.springframework.boot.web.servlet.FilterRegistrationBean: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+---
+spring:
   config:
     activate:
       on-profile: docker
@@ -45,6 +70,7 @@ logging:
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://postgres:5432/counterdb}
 
+logging:
   level:
     org.springframework.web: INFO
     org.springframework.web.servlet.DispatcherServlet: INFO
