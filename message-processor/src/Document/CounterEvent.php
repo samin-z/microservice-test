@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Document;
 
@@ -19,7 +20,7 @@ class CounterEvent
     #[ODM\Field(type: "date")]
     private \DateTime $createdAt;
 
-    #[ODM\EmbedOne]
+    #[ODM\EmbedOne] // this field stores additional information about the counter increment event
     private array $metadata = [];
 
     public function getId(): ?string

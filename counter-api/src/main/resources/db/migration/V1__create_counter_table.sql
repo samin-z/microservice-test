@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS counter (
+    id INTEGER PRIMARY KEY,
+    value INTEGER NOT NULL DEFAULT 0,
+    CONSTRAINT single_row CHECK (id = 1)
+);
+
+INSERT INTO counter (id, value)
+VALUES (1, 0)
+ON CONFLICT (id) DO NOTHING;
