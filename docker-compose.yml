@@ -94,6 +94,7 @@ services:
       - MONGODB_URL=mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-admin123}@mongodb:27017/${MONGO_DATABASE:-events}?authSource=admin
       - LOCALSTACK_ENDPOINT=http://localstack:4566
       - SQS_QUEUE_URL=http://localstack:4566/000000000000/${SQS_QUEUE_NAME:-counter-increment-queue}
+      - MESSENGER_TRANSPORT_DSN=sqs://default?region=${AWS_REGION:-us-east-1}&endpoint=http://localstack:4566&queue_name=${SQS_QUEUE_NAME:-counter-increment-queue}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-test}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-test}
       - AWS_REGION=${AWS_REGION:-us-east-1}
@@ -109,8 +110,8 @@ services:
       sh -c "
         echo 'Starting Message Processor...' &&
         php bin/console app:health-check &&
-        echo 'Health check completed. Ready to process messages.' &&
-        tail -f /dev/null
+        echo 'Health check completed. Starting consumer...' &&
+        php bin/console messenger:consume sqs -vv
       "
 
 volumes:

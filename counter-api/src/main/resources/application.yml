@@ -39,6 +39,17 @@ spring:
     log-request-details: true
     log-resolved-exception: true
 
+aws:
+  sqs:
+    endpoint: http://localhost:4566
+    region: us-east-1
+    queue-name: counter-increment-queue
+
+sqs:
+  queue-name: ${SQS_QUEUE_NAME:counter-increment-queue}
+  endpoint: ${SQS_ENDPOINT:http://localhost:4566}
+  region: ${SQS_REGION:us-east-1}
+
 management:
   endpoints:
     web:
