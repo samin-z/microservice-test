@@ -11,6 +11,10 @@ import java.net.URI
 
 @Configuration
 class AwsConfig {
+    
+    init {
+        println("aws config class is initialized!")
+    }
 
     @Value("\${AWS_ACCESS_KEY_ID:test}")
     private lateinit var accessKey: String
@@ -26,14 +30,23 @@ class AwsConfig {
 
     @Bean
     fun sqsAsyncClient(): SqsAsyncClient {
+        println("create SQS async client...")
+        println("Access Key: $accessKey")
+        println("Secret Key: $secretKey")
+        println("Region: $region")
+        println("Endpoint: $endpoint")
+        
         val credentials = AwsBasicCredentials.create(accessKey, secretKey)
         val credentialsProvider = StaticCredentialsProvider.create(credentials)
 
-        return SqsAsyncClient
+        val client = SqsAsyncClient
             .builder()
             .region(Region.of(region))
             .credentialsProvider(credentialsProvider)
             .endpointOverride(URI.create(endpoint))
             .build()
+            
+        println("SQS async client successfully created")
+        return client
     }
 }

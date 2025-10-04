@@ -14,8 +14,13 @@ import java.time.Instant
 @Service
 class CounterService(
     private val counterRepository: CounterRepository,
-    private val sqsAsyncClient: SqsAsyncClient
+    private val sqsAsyncClient: SqsAsyncClient?
 ) {
+    
+    init {
+        println("CounterService initialized")
+        println("SQS Client: $sqsAsyncClient")
+    }
 
     private val queueName: String = System.getenv("SQS_QUEUE_NAME") ?: "counter-increment-queue"
     @Volatile private var cachedQueueUrl: String? = null
@@ -30,15 +35,16 @@ class CounterService(
         cachedQueueUrl?.let { return it }
         synchronized(this) { // this line ensure that were executing one thread at a time
             cachedQueueUrl?.let { return it }
+            val client = sqsAsyncClient ?: throw IllegalStateException("SQS client is null")
             val url = try {
-                sqsAsyncClient.getQueueUrl(
+                client.getQueueUrl(
                     GetQueueUrlRequest.builder().queueName(queueName).build()
                 ).get().queueUrl()
             } catch (ex: Exception) {
-                sqsAsyncClient.createQueue(
+                client.createQueue(
                     CreateQueueRequest.builder().queueName(queueName).build()
                 ).get()
-                sqsAsyncClient.getQueueUrl(
+                client.getQueueUrl(
                     GetQueueUrlRequest.builder().queueName(queueName).build()
                 ).get().queueUrl()
             }
@@ -68,6 +74,12 @@ class CounterService(
         """.trimIndent()
 
         // sending SQS message 
+        println("Attempting to send SQS message...")
+        if (sqsAsyncClient == null) {
+            println("SQS Client is null - cannot send message!")
+            return counter.value
+        }
+        
         val request = SendMessageRequest.builder()
             .queueUrl(resolveQueueUrl())
             .messageBody(payload)
@@ -80,7 +92,13 @@ class CounterService(
                 )
             )
             .build()
-        sqsAsyncClient.sendMessage(request)
+        try {
+            val result = sqsAsyncClient.sendMessage(request).get()
+            println("SQS message sucessfuly sends: ${result.messageId()}")
+        } catch (ex: Exception) {
+            println("SQS message was failed to send: ${ex.message}")
+            ex.printStackTrace()
+        }
 
         return counter.value
     }

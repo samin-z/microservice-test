@@ -33,7 +33,6 @@ dependencies {
     implementation("org.flywaydb:flyway-core")
 
     // AWS SDK for SQS
-    implementation("io.awspring.cloud:spring-cloud-aws-starter-sqs:3.0.4")
     implementation("software.amazon.awssdk:sqs:2.21.29")
 
     // JSON processing
