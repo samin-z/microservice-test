@@ -67,8 +67,7 @@ class CounterService(
         counter.value = counter.value + 1
         counterRepository.save(counter)
 
-        // this block creates event payload according to the readme 
-        // in kotlin triple " start a raw multiline string
+        // Simple JSON format that matches CounterIncrementMessage constructor
         val payload = """
             {"eventType":"COUNTER_INCREMENT","timestamp":"${Instant.now()}","metadata":{"source":"counter-api","version":"1.0"}}
         """.trimIndent()

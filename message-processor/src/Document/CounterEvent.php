@@ -20,7 +20,7 @@ class CounterEvent
     #[ODM\Field(type: "date")]
     private \DateTime $createdAt;
 
-    #[ODM\EmbedOne] // this field stores additional information about the counter increment event
+    #[ODM\Field(type: "hash")] // this field stores additional information about the counter increment event
     private array $metadata = [];
 
     public function getId(): ?string

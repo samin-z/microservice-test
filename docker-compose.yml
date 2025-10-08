@@ -110,8 +110,8 @@ services:
       sh -c "
         echo 'Starting Message Processor...' &&
         php bin/console app:health-check &&
-        echo 'Health check completed. Starting consumer...' &&
-        php bin/console messenger:consume sqs -vv
+        echo 'Health check completed. Starting simple SQS consumer...' &&
+        php bin/console app:simple-sqs-consumer
       "
 
 volumes:
