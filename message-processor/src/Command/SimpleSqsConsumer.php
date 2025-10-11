@@ -15,6 +15,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
     name: 'app:simple-sqs-consumer',
     description: 'Simple SQS consumer that processes counter increment messages',
 )]
+// it consumes SQS messages and saves them to mongoDB
 class SimpleSqsConsumer extends Command
 {
     public function __construct(
@@ -22,7 +23,10 @@ class SimpleSqsConsumer extends Command
     ) {
         parent::__construct();
     }
-
+    /* its a loop that polls SQS for messages and saves them to mongoDB
+    process json messages and creates documents for CounterEvent
+    if the messages from SQS queue are processed, they are deleted from the queue
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -30,14 +34,14 @@ class SimpleSqsConsumer extends Command
         $io->title('Simple SQS Consumer');
         $io->note('This consumer will process SQS messages directly without Symfony Messenger');
         
-        // Get SQS configuration
+        // getting SQS configuration
         $queueUrl = $_ENV['SQS_QUEUE_URL'] ?? 'http://localstack:4566/000000000000/counter-increment-queue';
         $awsEndpoint = $_ENV['LOCALSTACK_ENDPOINT'] ?? 'http://localstack:4566';
         
         $io->info("Queue URL: $queueUrl");
         $io->info("AWS Endpoint: $awsEndpoint");
         
-        // Simple SQS client configuration
+        //  SQS client configuration
         $sqsConfig = [
             'version' => 'latest',
             'region' => 'us-east-1',
@@ -53,7 +57,7 @@ class SimpleSqsConsumer extends Command
             
             $io->success('SQS client created successfully');
             
-            // Poll for messages
+
             $io->note('Polling for messages... (Press Ctrl+C to stop)');
             
             while (true) {
@@ -61,18 +65,18 @@ class SimpleSqsConsumer extends Command
                     $result = $sqsClient->receiveMessage([
                         'QueueUrl' => $queueUrl,
                         'MaxNumberOfMessages' => 1,
-                        'WaitTimeSeconds' => 20, // Long polling
+                        'WaitTimeSeconds' => 20, 
                     ]);
                     
                     if (!empty($result['Messages'])) {
                         foreach ($result['Messages'] as $message) {
                             $io->info('Received message: ' . $message['MessageId']);
                             
-                            // Parse the JSON message
+                            // parsed json message from kotlin
                             $messageBody = json_decode($message['Body'], true);
                             
                             if ($messageBody && isset($messageBody['eventType']) && $messageBody['eventType'] === 'COUNTER_INCREMENT') {
-                                // Create and save the counter event
+                                // creating and saving counter event, here we map JSON fields to counterEvent object
                                 $counterEvent = new CounterEvent();
                                 $counterEvent->setEventType($messageBody['eventType']);
                                 $counterEvent->setTimestamp(new \DateTime($messageBody['timestamp']));
@@ -84,7 +88,7 @@ class SimpleSqsConsumer extends Command
                                 
                                 $io->success('Counter event saved to MongoDB: ' . $counterEvent->getId());
                                 
-                                // Delete the message from the queue
+                                // deletea the message from the queue
                                 $sqsClient->deleteMessage([
                                     'QueueUrl' => $queueUrl,
                                     'ReceiptHandle' => $message['ReceiptHandle'],
@@ -100,7 +104,7 @@ class SimpleSqsConsumer extends Command
                     }
                 } catch (\Exception $e) {
                     $io->error('Error processing message: ' . $e->getMessage());
-                    sleep(5); // Wait before retrying
+                    sleep(5);
                 }
             }
             

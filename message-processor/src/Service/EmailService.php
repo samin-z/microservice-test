@@ -9,7 +9,7 @@ use Aws\Exception\AwsException;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use App\Document\CounterEvent;
 use Psr\Log\LoggerInterface;
-
+// this is the service that sends the hourly email report and handles email reports through AWS SES
 class EmailService
 {
     private SesClient $sesClient;
@@ -45,6 +45,7 @@ class EmailService
         ]);
     }
 
+    // this is the main function that sends hourly counter reports
     public function sendHourlyReport(): bool
     {
         try {
@@ -130,6 +131,7 @@ class EmailService
         }
     }
 
+    // this function creates plain email template
     private function generateTextEmail(array $data): string
     {
         return sprintf(
@@ -150,6 +152,7 @@ class EmailService
         );
     }
 
+    // this function creates html email template
     private function generateHtmlEmail(array $data): string
     {
         $reportTime = $data['report_time']->format('Y-m-d H:i:s');
@@ -195,6 +198,7 @@ class EmailService
         );
     }
 
+    // this is the function for removing processes events from database
     private function clearProcessedEvents(array $events): void
     {
         foreach ($events as $event) {

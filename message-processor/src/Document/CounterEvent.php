@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Document;
 
 use Doctrine\ODM\MongoDB\Mapping\Annotations as ODM;
-
+// this is the mongoDB document that stores the counter increment events
 #[ODM\Document(collection: "counter_events")]
 class CounterEvent
 {

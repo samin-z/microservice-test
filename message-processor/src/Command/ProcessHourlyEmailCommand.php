@@ -16,6 +16,7 @@ use Psr\Log\LoggerInterface;
     name: 'app:process-hourly-email',
     description: 'Process hourly counter events and send email report via SES'
 )]
+// console command for triggering hourly email report
 class ProcessHourlyEmailCommand extends Command
 {
     public function __construct(
@@ -25,6 +26,7 @@ class ProcessHourlyEmailCommand extends Command
         parent::__construct();
     }
 
+    // here we run the email service and handle success or failure of it
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);

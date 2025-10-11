@@ -30,6 +30,7 @@ class CounterService(
     fisrt of all avoid multiple AWS api calls, 
     second create queue in case it does not exist and 
     this this stop multiple request to have conflicts
+    gets or creates SQS queue URL with caching
     */
     private fun resolveQueueUrl(): String {
         cachedQueueUrl?.let { return it }
