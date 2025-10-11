@@ -98,8 +98,9 @@ services:
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-test}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-test}
       - AWS_REGION=${AWS_REGION:-us-east-1}
-      - SES_FROM_EMAIL=${SES_FROM_EMAIL:-noreply@example.com}
-      - SES_TO_EMAIL=${SES_TO_EMAIL:-admin@example.com}
+      - AWS_ENDPOINT=http://localstack:4566
+      - SES_FROM_EMAIL=${SES_FROM_EMAIL:-samin.zavarkesh+test@gmail.com}
+      - SES_TO_EMAIL=${SES_TO_EMAIL:-samin.zavarkesh+test@gmail.com}
     depends_on:
       mongodb:
         condition: service_healthy

@@ -20,5 +20,15 @@ services:
             - '../src/Document/'
             - '../src/Kernel.php'
 
+    # EmailService configuration
+    App\Service\EmailService:
+        arguments:
+            $awsAccessKeyId: '%env(AWS_ACCESS_KEY_ID)%'
+            $awsSecretAccessKey: '%env(AWS_SECRET_ACCESS_KEY)%'
+            $awsRegion: '%env(AWS_REGION)%'
+            $awsEndpoint: '%env(AWS_ENDPOINT)%'
+            $fromEmail: '%env(SES_FROM_EMAIL)%'
+            $toEmail: '%env(SES_TO_EMAIL)%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
