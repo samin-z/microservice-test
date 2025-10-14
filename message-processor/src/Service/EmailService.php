@@ -132,7 +132,7 @@ class EmailService
     }
 
     // this function creates plain email template
-    private function generateTextEmail(array $data): string
+    public function generateTextEmail(array $data): string
     {
         return sprintf(
             "Counter Activity Summary\n" .
@@ -153,7 +153,7 @@ class EmailService
     }
 
     // this function creates html email template
-    private function generateHtmlEmail(array $data): string
+    public function generateHtmlEmail(array $data): string
     {
         $reportTime = $data['report_time']->format('Y-m-d H:i:s');
         $totalIncrements = $data['total_increments'];
