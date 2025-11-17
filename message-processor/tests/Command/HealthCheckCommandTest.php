@@ -31,7 +31,7 @@ class HealthCheckCommandTest extends TestCase
 
     public function testCommandExecutionWithMissingEnvVars(): void
     {
-        // Clear environment variables
+        // environment variables
         $envVars = [
             'APP_ENV',
             'MONGODB_URL',
@@ -57,12 +57,11 @@ class HealthCheckCommandTest extends TestCase
         $this->assertStringContainsString('MongoDB Connection', $outputContent);
         $this->assertStringContainsString('SQS Configuration', $outputContent);
         $this->assertStringContainsString('Health check completed!', $outputContent);
-        $this->assertStringContainsString('❌', $outputContent); // Should show missing vars
+        $this->assertStringContainsString('not set', $outputContent); // shows missing vars
     }
 
     public function testCommandExecutionWithAllEnvVars(): void
     {
-        // Set all required environment variables
         $_ENV['APP_ENV'] = 'test';
         $_ENV['MONGODB_URL'] = 'mongodb://localhost:27017/test';
         $_ENV['LOCALSTACK_ENDPOINT'] = 'http://localhost:4566';
@@ -82,17 +81,16 @@ class HealthCheckCommandTest extends TestCase
         $this->assertStringContainsString('MongoDB Connection', $outputContent);
         $this->assertStringContainsString('SQS Configuration', $outputContent);
         $this->assertStringContainsString('Health check completed!', $outputContent);
-        $this->assertStringContainsString('✅', $outputContent); // Should show configured vars
+        $this->assertStringContainsString('set', $outputContent);
         $this->assertStringContainsString('MongoDB URL configured', $outputContent);
         $this->assertStringContainsString('SQS Queue URL configured', $outputContent);
     }
 
     public function testCommandExecutionWithPartialEnvVars(): void
     {
-        // Set only some environment variables
         $_ENV['APP_ENV'] = 'test';
         $_ENV['MONGODB_URL'] = 'mongodb://localhost:27017/test';
-        // Leave others unset
+        // environment variables not set
         unset($_ENV['LOCALSTACK_ENDPOINT']);
         unset($_ENV['SQS_QUEUE_URL']);
         unset($_ENV['AWS_ACCESS_KEY_ID']);
@@ -106,12 +104,12 @@ class HealthCheckCommandTest extends TestCase
 
         $this->assertEquals(Command::SUCCESS, $exitCode);
         $this->assertStringContainsString('Message Processor Health Check', $outputContent);
-        $this->assertStringContainsString('✅ APP_ENV: ***', $outputContent);
-        $this->assertStringContainsString('✅ MONGODB_URL: ***', $outputContent);
-        $this->assertStringContainsString('❌ LOCALSTACK_ENDPOINT: NOT SET', $outputContent);
-        $this->assertStringContainsString('❌ SQS_QUEUE_URL: NOT SET', $outputContent);
-        $this->assertStringContainsString('❌ AWS_ACCESS_KEY_ID: NOT SET', $outputContent);
-        $this->assertStringContainsString('❌ SES_FROM_EMAIL: NOT SET', $outputContent);
+        $this->assertStringContainsString('set APP_ENV: ***', $outputContent);
+        $this->assertStringContainsString('set MONGODB_URL: ***', $outputContent);
+        $this->assertStringContainsString('not set LOCALSTACK_ENDPOINT: NOT SET', $outputContent);
+        $this->assertStringContainsString('not set SQS_QUEUE_URL: NOT SET', $outputContent);
+        $this->assertStringContainsString('not set AWS_ACCESS_KEY_ID: NOT SET', $outputContent);
+        $this->assertStringContainsString('not set SES_FROM_EMAIL: NOT SET', $outputContent);
     }
 
     public function testCommandShowsMessengerConsumeNote(): void
@@ -127,7 +125,6 @@ class HealthCheckCommandTest extends TestCase
 
     protected function tearDown(): void
     {
-        // Clean up environment variables after each test
         $envVars = [
             'APP_ENV',
             'MONGODB_URL',

@@ -96,7 +96,7 @@ class CounterIncrementHandlerTest extends TestCase
     {
         $complexMetadata = [
             'user_id' => '123',
-            'session_id' => 'abc-def-ghi',
+            'session_id' => 'test-123',
             'request_id' => 'req-456',
             'nested' => [
                 'level1' => [
@@ -139,7 +139,6 @@ class CounterIncrementHandlerTest extends TestCase
         ];
 
         foreach ($eventTypes as $eventType) {
-            // Create a new handler and document manager for each iteration
             $documentManager = $this->createMock(DocumentManager::class);
             $handler = new CounterIncrementHandler($documentManager);
             

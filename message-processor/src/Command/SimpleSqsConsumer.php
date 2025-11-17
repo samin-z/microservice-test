@@ -5,6 +5,7 @@ namespace App\Command;
 
 use App\Document\CounterEvent;
 use Doctrine\ODM\MongoDB\DocumentManager;
+use Sentry\State\HubInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -19,7 +20,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class SimpleSqsConsumer extends Command
 {
     public function __construct(
-        private readonly DocumentManager $documentManager
+        private readonly DocumentManager $documentManager,
+        private readonly ?HubInterface $sentryHub = null
     ) {
         parent::__construct();
     }
@@ -104,12 +106,24 @@ class SimpleSqsConsumer extends Command
                     }
                 } catch (\Exception $e) {
                     $io->error('Error processing message: ' . $e->getMessage());
+                    
+                    // Capture exception in Sentry
+                    if ($this->sentryHub !== null) {
+                        $this->sentryHub->captureException($e);
+                    }
+                    
                     sleep(5);
                 }
             }
             
         } catch (\Exception $e) {
             $io->error('Failed to create SQS client: ' . $e->getMessage());
+            
+            // Capture exception in Sentry
+            if ($this->sentryHub !== null) {
+                $this->sentryHub->captureException($e);
+            }
+            
             return Command::FAILURE;
         }
         

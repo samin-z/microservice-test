@@ -37,6 +37,7 @@ SQS Message → Symfony Messenger → MongoDB Document → Hourly Job → SES Em
 - **Message Queue**: Symfony Messenger + SQS transport
 - **Database**: MongoDB
 - **Email**: AWS SES integration
+- **Error Tracking**: Sentry integration
 - **Purpose**: Event collection and hourly email reports
 
 ### Infrastructure
@@ -274,6 +275,45 @@ docker-compose exec mongodb mongosh
 - `DATABASE_URL`: PostgreSQL connection string
 - `MONGODB_URL`: MongoDB connection string
 - `SES_FROM_EMAIL`: Email sender address for notifications
+- `SENTRY_DSN`: Sentry DSN for error tracking (optional)
+- `SENTRY_TRACES_SAMPLE_RATE`: Performance monitoring sample rate (0.0-1.0, default: 0.0)
+- `SENTRY_PROFILES_SAMPLE_RATE`: Profiling sample rate (0.0-1.0, default: 0.0)
+- `SENTRY_RELEASE`: Release version for tracking deployments (optional)
+- `SENTRY_SERVER_NAME`: Server name identifier (default: message-processor)
+
+### Sentry Error Tracking
+
+The Message Processor service includes Sentry integration for error tracking and monitoring. To enable Sentry:
+
+1. **Get your Sentry DSN**:
+   - Sign up at [sentry.io](https://sentry.io)
+   - Create a new project (PHP/Symfony)
+   - Copy your DSN from the project settings
+
+2. **Configure environment variables**:
+   ```bash
+   # In your .env file or docker-compose.yml
+   SENTRY_DSN=https://your-key@sentry.io/your-project-id
+   SENTRY_TRACES_SAMPLE_RATE=0.1  # 10% of transactions
+   SENTRY_RELEASE=1.0.0  # Optional: track releases
+   ```
+
+3. **Sentry automatically captures**:
+   - Unhandled exceptions in console commands
+   - Errors in message handlers
+   - AWS SES exceptions with context
+   - Symfony Messenger failures
+
+4. **Manual error capture** (already implemented):
+   ```php
+   // In your services, Sentry Hub is automatically injected
+   if ($this->sentryHub !== null) {
+       $this->sentryHub->captureException($exception, [
+           'tags' => ['service' => 'email'],
+           'contexts' => ['custom' => 'data'],
+       ]);
+   }
+   ```
 
 ## 🎓 Educational Value
 

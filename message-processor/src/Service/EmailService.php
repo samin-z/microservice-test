@@ -9,6 +9,7 @@ use Aws\Exception\AwsException;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use App\Document\CounterEvent;
 use Psr\Log\LoggerInterface;
+use Sentry\State\HubInterface;
 // this is the service that sends the hourly email report and handles email reports through AWS SES
 class EmailService
 {
@@ -17,6 +18,7 @@ class EmailService
     private LoggerInterface $logger;
     private string $fromEmail;
     private string $toEmail;
+    private ?HubInterface $sentryHub;
 
     public function __construct(
         DocumentManager $documentManager,
@@ -26,12 +28,14 @@ class EmailService
         string $awsRegion,
         string $awsEndpoint,
         string $fromEmail,
-        string $toEmail
+        string $toEmail,
+        ?HubInterface $sentryHub = null
     ) {
         $this->documentManager = $documentManager;
         $this->logger = $logger;
         $this->fromEmail = $fromEmail;
         $this->toEmail = $toEmail;
+        $this->sentryHub = $sentryHub;
 
         $this->sesClient = new SesClient([
             'version' => 'latest',
@@ -122,11 +126,38 @@ class EmailService
                 'error' => $e->getAwsErrorMessage(),
                 'error_code' => $e->getAwsErrorCode(),
             ]);
+            
+            // Capture AWS exception in Sentry
+            if ($this->sentryHub !== null) {
+                $this->sentryHub->captureException($e, [
+                    'tags' => [
+                        'service' => 'email',
+                        'aws_error_code' => $e->getAwsErrorCode(),
+                    ],
+                    'contexts' => [
+                        'aws' => [
+                            'error_message' => $e->getAwsErrorMessage(),
+                            'error_code' => $e->getAwsErrorCode(),
+                        ],
+                    ],
+                ]);
+            }
+            
             return false;
         } catch (\Exception $e) {
             $this->logger->error('Unexpected error sending hourly counter report email', [
                 'error' => $e->getMessage(),
             ]);
+            
+            // Capture exception in Sentry
+            if ($this->sentryHub !== null) {
+                $this->sentryHub->captureException($e, [
+                    'tags' => [
+                        'service' => 'email',
+                    ],
+                ]);
+            }
+            
             return false;
         }
     }

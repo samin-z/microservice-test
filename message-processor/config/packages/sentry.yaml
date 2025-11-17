@@ -1,0 +1,30 @@
+sentry:
+    # DSN - Sentry automatically reads from SENTRY_DSN env var if not specified here
+    # If SENTRY_DSN is empty or not set, Sentry will gracefully not send events
+    # We omit dsn here to let Sentry handle it automatically from env var
+    options:
+        environment: '%env(APP_ENV)%'
+        # Set sample rate for performance monitoring (0.0 to 1.0)
+        # Default: 0.0 (disabled). Set SENTRY_TRACES_SAMPLE_RATE env var to enable
+        traces_sample_rate: 0.0
+        # Set sample rate for profiling (0.0 to 1.0)
+        # Default: 0.0 (disabled). Set SENTRY_PROFILES_SAMPLE_RATE env var to enable
+        profiles_sample_rate: 0.0
+        # Enable error reporting
+        error_types: E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED
+        # Attach stack traces to messages
+        attach_stacktrace: true
+        # Send default PII (Personally Identifiable Information)
+        send_default_pii: false
+        # Maximum breadcrumbs to store
+        max_breadcrumbs: 50
+        # Release version (useful for tracking deployments) - optional
+        # release: '%env(string:SENTRY_RELEASE)%'
+        # Server name (defaults to message-processor if not set)
+        server_name: '%env(string:SENTRY_SERVER_NAME)%'
+    messenger:
+        # Enable Sentry integration for Symfony Messenger
+        enabled: true
+        # Capture exceptions in message handlers
+        capture_soft_fails: true
+

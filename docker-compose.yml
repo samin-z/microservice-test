@@ -101,6 +101,11 @@ services:
       - AWS_ENDPOINT=http://localstack:4566
       - SES_FROM_EMAIL=${SES_FROM_EMAIL:-samin.zavarkesh+test@gmail.com}
       - SES_TO_EMAIL=${SES_TO_EMAIL:-samin.zavarkesh+test@gmail.com}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE:-0.0}
+      - SENTRY_PROFILES_SAMPLE_RATE=${SENTRY_PROFILES_SAMPLE_RATE:-0.0}
+      - SENTRY_RELEASE=${SENTRY_RELEASE:-}
+      - SENTRY_SERVER_NAME=${SENTRY_SERVER_NAME:-message-processor}
     depends_on:
       mongodb:
         condition: service_healthy
