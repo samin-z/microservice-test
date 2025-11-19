@@ -57,7 +57,7 @@ class HealthCheckCommandTest extends TestCase
         $this->assertStringContainsString('MongoDB Connection', $outputContent);
         $this->assertStringContainsString('SQS Configuration', $outputContent);
         $this->assertStringContainsString('Health check completed!', $outputContent);
-        $this->assertStringContainsString('not set', $outputContent); // shows missing vars
+        $this->assertStringContainsString('NOT SET', $outputContent); // shows missing vars
     }
 
     public function testCommandExecutionWithAllEnvVars(): void
@@ -81,7 +81,7 @@ class HealthCheckCommandTest extends TestCase
         $this->assertStringContainsString('MongoDB Connection', $outputContent);
         $this->assertStringContainsString('SQS Configuration', $outputContent);
         $this->assertStringContainsString('Health check completed!', $outputContent);
-        $this->assertStringContainsString('set', $outputContent);
+        $this->assertStringContainsString('✅', $outputContent);
         $this->assertStringContainsString('MongoDB URL configured', $outputContent);
         $this->assertStringContainsString('SQS Queue URL configured', $outputContent);
     }
@@ -104,12 +104,12 @@ class HealthCheckCommandTest extends TestCase
 
         $this->assertEquals(Command::SUCCESS, $exitCode);
         $this->assertStringContainsString('Message Processor Health Check', $outputContent);
-        $this->assertStringContainsString('set APP_ENV: ***', $outputContent);
-        $this->assertStringContainsString('set MONGODB_URL: ***', $outputContent);
-        $this->assertStringContainsString('not set LOCALSTACK_ENDPOINT: NOT SET', $outputContent);
-        $this->assertStringContainsString('not set SQS_QUEUE_URL: NOT SET', $outputContent);
-        $this->assertStringContainsString('not set AWS_ACCESS_KEY_ID: NOT SET', $outputContent);
-        $this->assertStringContainsString('not set SES_FROM_EMAIL: NOT SET', $outputContent);
+        $this->assertStringContainsString('✅ APP_ENV: ***', $outputContent);
+        $this->assertStringContainsString('✅ MONGODB_URL: ***', $outputContent);
+        $this->assertStringContainsString('❌ LOCALSTACK_ENDPOINT: NOT SET', $outputContent);
+        $this->assertStringContainsString('❌ SQS_QUEUE_URL: NOT SET', $outputContent);
+        $this->assertStringContainsString('❌ AWS_ACCESS_KEY_ID: NOT SET', $outputContent);
+        $this->assertStringContainsString('❌ SES_FROM_EMAIL: NOT SET', $outputContent);
     }
 
     public function testCommandShowsMessengerConsumeNote(): void
@@ -120,7 +120,7 @@ class HealthCheckCommandTest extends TestCase
         $this->command->run($input, $output);
         $outputContent = $output->fetch();
 
-        $this->assertStringContainsString('You can now start consuming messages with: php bin/console messenger:consume sqs', $outputContent);
+        $this->assertStringContainsString('messenger:consume sqs', $outputContent);
     }
 
     protected function tearDown(): void

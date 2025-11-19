@@ -1,0 +1,29 @@
+{
+    "$schema": "https://raw.githubusercontent.com/infection/infection/main/resources/schema.json",
+    "source": {
+        "directories": [
+            "src"
+        ],
+        "excludes": [
+            "src/Kernel.php",
+            "src/Document"
+        ]
+    },
+    "timeout": 10,
+    "logs": {
+        "text": "infection.log",
+        "summary": "infection-summary.log",
+        "json": "infection-results.json",
+        "perMutator": "infection-per-mutator.log"
+    },
+    "mutators": {
+        "@default": true
+    },
+    "testFramework": "phpunit",
+    "bootstrap": "tests/bootstrap.php",
+    "initialTestsPhpOptions": "-d zend.enable_gc=0",
+    "minMsi": 60,
+    "minCoveredMsi": 70,
+    "ignoreMsiWithNoMutations": true
+}
+
